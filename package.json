@@ -19,5 +19,16 @@
   "bugs": {
     "url": "https://github.com/RomanGolovanov/pmz-lib/issues"
   },
-  "homepage": "https://github.com/RomanGolovanov/pmz-lib#readme"
+  "homepage": "https://github.com/RomanGolovanov/pmz-lib#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-browserify": "^0.5.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.5.3",
+    "vinyl-transform": "^1.0.0"
+  },
+  "dependencies": {
+    "jszip": "^2.6.0",
+    "windows-1251": "^0.1.2"
+  }
 }
