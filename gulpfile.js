@@ -1,22 +1,39 @@
 
-var gulp = require('gulp'),
-    uglify = require('gulp-uglify'),
-    browserify = require('gulp-browserify'),
+'use strict';
+
+var browserify = require('browserify'),
+    gulp = require('gulp'),
+    source = require('vinyl-source-stream'),
     rename = require('gulp-rename'),
-    transform = require('vinyl-transform');
+    buffer = require('vinyl-buffer'),
+    uglify = require('gulp-uglify'),
+    sourcemaps = require('gulp-sourcemaps'),
+    gutil = require('gulp-util');
 
-var src = ['./lib/init.js'];
-
-gulp.task('build-browserify', function() {
-  gulp.src(src)
-    .pipe(browserify())
+gulp.task('build', function () {
+  return browserify({
+        entries: './lib/init.js',
+        // require: {
+        //     "jszip": "JSZip",
+        //     "windows-1251": "windows1251"
+        // },
+        bundleExternal: false,
+        debug: false 
+    })
+    .external('windows-1251')
+    .external('JSZip')
+    .bundle()
+    .pipe(source('./lib/**/*.js'))
+    .pipe(buffer())
     .pipe(rename('pmz-lib.js'))
     .pipe(gulp.dest('./dist/'))
-    .pipe(uglify())
+
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(uglify()).on('error', gutil.log)
     .pipe(rename('pmz-lib.min.js'))
-    .pipe(gulp.dest('./dist'))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('build', ['build-browserify']);
-
 gulp.task('default', ['build']);
+
