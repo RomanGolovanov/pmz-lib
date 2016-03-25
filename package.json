@@ -2,7 +2,7 @@
   "name": "pmz-lib",
   "version": "1.0.0",
   "description": "Javascript library for manipulate pMetro maps (.PMZ files)",
-  "main": "index.js",
+  "main": "./lib/init.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,8 +17,8 @@
 
   "browserify-shim": {
     "windows-1251": "global:windows1251",
-    "jszip": "global:JSZip" 
-  },    
+    "jszip": "global:JSZip"
+  },
 
   "keywords": [
     "pmetro",

@@ -1,0 +1,29 @@
+{
+  "name": "pmz-lib",
+  "description": "Javascript library for manipulate pMetro maps (.PMZ files)",
+  "main": "./dist/pmz-lib.js",
+  "authors": [
+    "Roman Golovanov"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "pmetro",
+    "pmz"
+  ],
+  "homepage": "https://github.com/RomanGolovanov/pmz-lib",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jszip": "^2.6.0",
+    "windows-1251": "^0.1.2"
+  },
+  "devDependencies": {
+    "jquery": "^2.2.2",
+    "requirejs": "^2.2.0"
+  }
+}

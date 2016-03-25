@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Pmz-Lib Example</title>
+</head>
+<body>
+
+<script type="text/javascript" src="../bower_components/jquery/dist/jquery.js"></script>
+<script type="text/javascript" src="../bower_components/jszip/dist/jszip.js"></script>
+<script type="text/javascript" src="../bower_components/windows-1251/windows-1251.js"></script>
+<script type="text/javascript" src="../dist/pmz-lib.js"></script>
+<script type="text/javascript">
+	
+$(document).ready(function(){
+
+	var request = new XMLHttpRequest();
+	request.open('GET', '../assets/Moscow.zip', true);
+	request.responseType = 'arraybuffer';
+
+	request.onload = function (event) {
+		var model = pmz.File.load({ type:'application/zip', content: request.response });
+		console.log(model);
+	};
+
+	request.send(null);
+
+});
+
+</script>
+
+</body>
+</html>

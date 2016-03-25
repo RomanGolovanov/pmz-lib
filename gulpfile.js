@@ -8,20 +8,26 @@ var browserify = require('browserify'),
     buffer = require('vinyl-buffer'),
     uglify = require('gulp-uglify'),
     sourcemaps = require('gulp-sourcemaps'),
-    gutil = require('gulp-util');
+    gutil = require('gulp-util'),
+    http = require('http'),
+    fs = require('fs');    
+
+gulp.task('assets', function (cb) {
+
+    http.get("http://maps.ametro.org/maps/Moscow.zip", function(response) {
+        var file = fs.createWriteStream("assets/Moscow.zip");
+        file.on('finish', cb);
+        response.pipe(file);
+    });
+});
 
 gulp.task('build', function () {
   return browserify({
         entries: './lib/init.js',
-        // require: {
-        //     "jszip": "JSZip",
-        //     "windows-1251": "windows1251"
-        // },
         bundleExternal: false,
+        standalone: 'pmz',
         debug: false 
     })
-    .external('windows-1251')
-    .external('JSZip')
     .bundle()
     .pipe(source('./lib/**/*.js'))
     .pipe(buffer())
@@ -36,4 +42,6 @@ gulp.task('build', function () {
 });
 
 gulp.task('default', ['build']);
+
+gulp.task('all', ['build', 'assets']);
 

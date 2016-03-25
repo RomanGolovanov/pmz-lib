@@ -1,12 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-module.exports.PmzModel = require('./model/model');
-
-module.exports.PmzModelFile = require('./storage/model-file');
-
-
-},{"./model/model":8,"./storage/model-file":13}],2:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.pmz = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
 function PmzPoint(x,y){
@@ -21,7 +13,7 @@ PmzPoint.prototype.isEmpty = function(){
 
 module.exports = PmzPoint;
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 'use strict';
 
 function PmzRect(x,y,width,height){
@@ -38,7 +30,7 @@ PmzRect.prototype.isEmpty = function(){
 
 module.exports = PmzRect;
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 function PmzTime(minutes, seconds){
@@ -49,7 +41,7 @@ function PmzTime(minutes, seconds){
 
 module.exports = PmzTime;
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -174,7 +166,15 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./point":2,"./rect":3,"./time":4}],6:[function(require,module,exports){
+},{"./point":1,"./rect":2,"./time":3}],5:[function(require,module,exports){
+'use strict';
+
+module.exports.Model = require('./model/model');
+
+module.exports.File = require('./storage/model-file');
+
+
+},{"./model/model":8,"./storage/model-file":14}],6:[function(require,module,exports){
 'use strict';
 
 function PmzAdditionNodes(line, src, dst, points, isSpline){
@@ -323,6 +323,69 @@ module.exports = PmzTransport;
 },{}],12:[function(require,module,exports){
 'use strict';
 
+module.exports.formatIniText = function(ini){
+    var lines = [];
+    Object.keys(ini).forEach(function(sectionKey){
+        lines.push('[' + sectionKey + ']');
+        Object.keys(ini[sectionKey]).forEach(function(valueKey){
+            var value = ini[sectionKey][valueKey];
+            if(value instanceof Array){
+                for(var i=0;i<value.length;i++){
+                lines.push(valueKey + '=' + value[i]);
+                }
+            }else{
+                lines.push(valueKey + '=' + value);
+            }
+        });
+    });
+    return lines.reduce(function(a,c){ return a+'\n'+c; });
+};
+
+module.exports.parseIniText = function(text){
+    var regex = {
+        section: /^\s*\[\s*([^\]]*)\s*\]\s*$/,
+        param: /^\s*([\w\.\-\_]+)\s*=\s*(.*?)\s*$/,
+        comment: /^\s*;.*$/
+    };
+    var value = {};
+    var lines = text.split(/\r\n|\r|\n/);
+    var section = null;
+    lines.forEach(function(line){
+        if(regex.comment.test(line)){
+            return;
+        }else if(regex.param.test(line)){
+            var match = line.match(regex.param);
+            if(section){
+                var currentValue = value[section][match[1]];
+                if(!currentValue){
+                    value[section][match[1]] = match[2];
+                }else{
+                    if(typeof(currentValue)==='string'){
+                        value[section][match[1]] = [currentValue, match[2]];
+                    }else{
+                        value[section][match[1]].push(match[2]);
+                    }
+                }
+
+
+
+            }else{
+                value[match[1]] = match[2];
+            }
+        }else if(regex.section.test(line)){
+            var match = line.match(regex.section);
+            value[match[1]] = {};
+            section = match[1];
+        }else if(line.length == 0 && section){
+            section = null;
+        };
+    });
+    return value;
+};
+
+},{}],13:[function(require,module,exports){
+'use strict';
+
 var PmzMetadata = require('../model/metadata');
 
 function load(ini){
@@ -362,11 +425,12 @@ module.exports.load = load;
 
 module.exports.save = save;
 
-},{"../model/metadata":7}],13:[function(require,module,exports){
+},{"../model/metadata":7}],14:[function(require,module,exports){
 (function (global){
 'use strict';
 
 var JSZip = (typeof window !== "undefined" ? window['JSZip'] : typeof global !== "undefined" ? global['JSZip'] : null),
+    IniFile = require('./ini-file'),
     PmzUtils = require('../common/utils'),
     PmzModel = require('../model/model'),
     PmzMetadataFile = require('./metadata-file'),
@@ -387,7 +451,7 @@ function enumerateEntries(zip, ext, callback){
 
 function enumerateIniEntries(zip, ext, callback){
     enumerateEntries(zip, ext, function(name, entry){
-        return callback(name, PmzUtils.parseIniText(
+        return callback(name, IniFile.parseIniText(
             PmzUtils.decodeWindows1251(entry.asUint8Array())));
     });
 }
@@ -434,7 +498,7 @@ function save(file, model){
     var zip = openZip(file);
     
     var metaIni = PmzMetadataFile.save(model.metadata);
-    var metaText = PmzUtils.formatIniText(metaIni);
+    var metaText = IniFile.formatIniText(metaIni);
     var metaEncoded = PmzUtils.encodeWindows1251(metaText);
     zip.file(model.metadata.name + '.cty', metaEncoded);
 
@@ -446,7 +510,7 @@ module.exports.load = load;
 module.exports.save = save;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../common/utils":5,"../model/model":8,"./metadata-file":12,"./scheme-file":14,"./transport-file":15}],14:[function(require,module,exports){
+},{"../common/utils":4,"../model/model":8,"./ini-file":12,"./metadata-file":13,"./scheme-file":15,"./transport-file":16}],15:[function(require,module,exports){
 'use strict';
 
 var PmzUtils = require('../common/utils'),
@@ -457,7 +521,7 @@ var PmzUtils = require('../common/utils'),
 
 
 function asAdditionalNodes(text){
-    var parts = asArray(text);
+    var parts = PmzUtils.asArray(text);
 
     var line = parts[0];
     var src = parts[1];
@@ -557,77 +621,78 @@ module.exports.save = save;
 
 
 
-},{"../common/point":2,"../common/utils":5,"../model/additional-nodes":6,"../model/scheme":10,"../model/scheme-line":9}],15:[function(require,module,exports){
+},{"../common/point":1,"../common/utils":4,"../model/additional-nodes":6,"../model/scheme":10,"../model/scheme-line":9}],16:[function(require,module,exports){
 'use strict';
 
-var PmzTransportFile = (function(){
+var PmzTransport = require('../model/transport');
 
-    function loadTrpOptions(ini){
-        return {
-            type: ini['Type'] || 'Метро'
-        }
-    }
 
-    function loadTrpLines(cityDelays, ini){
-        var lines = {};
-        for(var key in ini){
-            var item = ini[key];
-
-            var delays = {};
-            if(item['Delays']){
-                var delayValues = item.Delays.split(',');
-                for(var i=0; i<cityDelays.length; i++){
-                    delays[cityDelays[i]] = delayValues[i];
-                }
-            }
-            if(item['DelayDay']){
-                delays['Day'] =  item.DelayDay;
-            }
-
-            if(item['DelayNight']){
-                delays['Night'] =  item.DelayNight;
-            }
-
-            lines[item.Name] = {
-                sectionName: key,
-                lineMap: item['LineMap'],
-                stations: item['Stations'],
-                driving: item['Driving'],
-                delays: delays
-            }            
-
-        }
-        return lines;
-    }
-
-    function loadTrpTransfers(ini){
-        return ini;
-    }
-
-    function filterTrpLineSections(ini){
-        var sections = {};
-        for(var key in ini){
-            if(['Options','Transfers','AdditionalInfo'].indexOf(key)===-1) {
-                sections[key] = ini[key];                    
-            }
-        }
-        return sections;
-    }
-
+function loadTrpOptions(ini){
     return {
-	    load: function (ini, name, metadata){
-	        return new PmzTransport(name, name, 
-	            loadTrpOptions(ini['Options'] || {}),
-	            loadTrpLines(metadata.delays, filterTrpLineSections(ini)),
-	            loadTrpTransfers(ini['Transfers']|| {}));
-	    },
+        type: ini['Type'] || 'Метро'
+    }
+}
 
-        save: function(){
-            throw new TypeError('Not implemented');
+function loadTrpLines(cityDelays, ini){
+    var lines = {};
+    for(var key in ini){
+        var item = ini[key];
+
+        var delays = {};
+        if(item['Delays']){
+            var delayValues = item.Delays.split(',');
+            for(var i=0; i<cityDelays.length; i++){
+                delays[cityDelays[i]] = delayValues[i];
+            }
         }
-    };
+        if(item['DelayDay']){
+            delays['Day'] =  item.DelayDay;
+        }
 
-})();
+        if(item['DelayNight']){
+            delays['Night'] =  item.DelayNight;
+        }
 
+        lines[item.Name] = {
+            sectionName: key,
+            lineMap: item['LineMap'],
+            stations: item['Stations'],
+            driving: item['Driving'],
+            delays: delays
+        }            
 
-},{}]},{},[1]);
+    }
+    return lines;
+}
+
+function loadTrpTransfers(ini){
+    return ini;
+}
+
+function filterTrpLineSections(ini){
+    var sections = {};
+    for(var key in ini){
+        if(['Options','Transfers','AdditionalInfo'].indexOf(key)===-1) {
+            sections[key] = ini[key];                    
+        }
+    }
+    return sections;
+}
+
+function load(ini, name, metadata){
+    return new PmzTransport(name, name, 
+        loadTrpOptions(ini['Options'] || {}),
+        loadTrpLines(metadata.delays, filterTrpLineSections(ini)),
+        loadTrpTransfers(ini['Transfers']|| {}));
+}
+
+function save(){
+    throw new TypeError('Not implemented');
+}
+
+module.exports.load = load;
+
+module.exports.save = save;
+
+},{"../model/transport":11}]},{},[5])(5)
+});
