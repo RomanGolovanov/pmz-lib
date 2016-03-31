@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es3",
+        "noImplicitAny": true,
+        "removeComments": false,
+        "moduleResolution": "node",
+        "preserveConstEnums": true,
+        "sourceMap": false,
+        "inlineSourceMap": false,
+        "outDir": "../lib"
+    }
+}

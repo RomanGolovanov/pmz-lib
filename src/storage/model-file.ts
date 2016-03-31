@@ -1,22 +1,25 @@
 /// <reference path="../typings/jszip.d.ts" />
-"use strict";
-var JSZip = require('jszip');
-var PmzUtils = require('./utils');
-var PmzMetadataFile = require('./metadata-file');
-var PmzTransportFile = require('./transport-file');
-var PmzSchemeFile = require('./scheme-file');
-var IniFile = require('./ini-file');
-var model_1 = require('../model/model');
-function endsWith(text, suffix) {
-    if (!text) {
+
+import * as JSZip from 'jszip';
+
+import * as PmzUtils from './utils';
+import * as PmzMetadataFile from './metadata-file';
+import * as PmzTransportFile from './transport-file';
+import * as PmzSchemeFile from './scheme-file';
+import * as IniFile from './ini-file';
+
+import {PmzModel} from '../model/model';
+
+function endsWith(text: string, suffix: string) {
+    if(!text){
         return false;
     }
     return text.indexOf(suffix, text.length - suffix.length) !== -1;
-}
-;
-function enumerateEntries(zip, ext, callback) {
+};
+
+function enumerateEntries(zip: any, ext: any, callback: any) {
     for (var entryName in zip.files) {
-        var zipEntry = zip.files[entryName];
+        var zipEntry: any = zip.files[entryName];
         if (endsWith(entryName, ext)) {
             if (callback(entryName, zipEntry)) {
                 return;
@@ -24,52 +27,63 @@ function enumerateEntries(zip, ext, callback) {
         }
     }
 }
-function enumerateIniEntries(zip, ext, callback) {
-    enumerateEntries(zip, ext, function (name, entry) {
-        return callback(name, IniFile.parseIniText(PmzUtils.decodeWindows1251(entry.asUint8Array())));
+
+function enumerateIniEntries(zip: any, ext: string, callback: any) {
+    enumerateEntries(zip, ext, function(name: string, entry: any) {
+        return callback(name, IniFile.parseIniText(
+            PmzUtils.decodeWindows1251(entry.asUint8Array())));
     });
 }
-function openZip(file) {
+
+function openZip(file: any): any {
     if (['application/x-zip-compressed', 'application/zip'].indexOf(file.type) == -1) {
         throw new TypeError('Invalid file type ' + file.type + ' for PMZ map');
     }
     var zip = new JSZip(file.content);
-    enumerateEntries(zip, '.pmz', function (name, entry) {
+    enumerateEntries(zip, '.pmz', function(name: string, entry: any) {
         zip = new JSZip(entry.asArrayBuffer());
         return true;
     });
     return zip;
 }
-var PmzFile = (function () {
-    function PmzFile() {
-    }
-    PmzFile.load = function (file) {
+
+export class PmzFile {
+    static load(file: any) {
+
         var zip = openZip(file);
-        var model = null;
-        enumerateIniEntries(zip, '.cty', function (name, ini) {
-            model = new model_1.PmzModel(PmzMetadataFile.load(ini));
+
+        var model: PmzModel = null;
+        enumerateIniEntries(zip, '.cty', function(name: string, ini: any) {
+            model = new PmzModel(PmzMetadataFile.load(ini));
         });
+
         if (!model) {
             throw new TypeError('Invalid file format');
         }
-        enumerateIniEntries(zip, '.trp', function (name, ini) {
+
+        enumerateIniEntries(zip, '.trp', function(name: string, ini: any) {
             var transport = PmzTransportFile.load(ini, name, model.getMetadata());
             model.addTransport(transport.name, transport.options, transport.lines, transport.transfers);
         });
-        enumerateIniEntries(zip, '.map', function (name, ini) {
+
+        enumerateIniEntries(zip, '.map', function(name: string, ini: any) {
             var scheme = PmzSchemeFile.load(ini, name, model);
             model.addScheme(scheme.name, scheme.options, scheme.lines);
         });
+
         return model;
-    };
-    PmzFile.save = function (file, model) {
+    }
+
+    static save(file: any, model: PmzModel) {
         var zip = openZip(file);
+
         var metaIni = PmzMetadataFile.save(model.metadata);
         var metaText = IniFile.formatIniText(metaIni);
         var metaEncoded = PmzUtils.encodeWindows1251(metaText);
         zip.file(model.metadata.name + '.cty', metaEncoded);
+
         file.content = zip.generate({ type: 'arraybuffer' });
-    };
-    return PmzFile;
-}());
-exports.PmzFile = PmzFile;
+    }
+
+}
+

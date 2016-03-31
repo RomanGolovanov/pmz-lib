@@ -18,7 +18,7 @@ $(document).ready(function(){
 	request.responseType = 'arraybuffer';
 
 	request.onload = function (event) {
-		var model = pmz.File.load({ type:'application/zip', content: request.response });
+		var model = pmz.PmzFile.load({ type:'application/zip', content: request.response });
 		console.log(model);
 	};
 
