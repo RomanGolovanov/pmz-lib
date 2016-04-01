@@ -10,16 +10,15 @@
     "type": "git",
     "url": "git+https://github.com/RomanGolovanov/pmz-lib.git"
   },
-
   "browserify": {
-    "transform": [ "browserify-shim" ]
+    "transform": [
+      "browserify-shim"
+    ]
   },
-
   "browserify-shim": {
     "windows-1251": "global:windows1251",
     "jszip": "global:JSZip"
   },
-
   "keywords": [
     "pmetro",
     "pmz"
@@ -36,11 +35,13 @@
     "gulp": "^3.9.1",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.12.1",
     "gulp-uglify": "^1.5.3",
     "gulp-util": "^3.0.7",
+    "gulp-watch": "^4.3.5",
+    "tsc": "^1.20150623.0",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "tsc": "^1.20150623.0"
+    "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
     "jszip": "^2.6.0",

@@ -301,7 +301,7 @@ exports.save = save;
 
 },{"../model/metadata":3}],14:[function(require,module,exports){
 (function (global){
-/// <reference path="../../typings/main.d.ts" />
+/// <reference path="../typings/jszip.d.ts" />
 "use strict";
 var JSZip = (typeof window !== "undefined" ? window['JSZip'] : typeof global !== "undefined" ? global['JSZip'] : null);
 var PmzUtils = require('./utils');
@@ -502,7 +502,7 @@ exports.save = save;
 
 },{"../model/transport":11}],17:[function(require,module,exports){
 (function (global){
-/// <reference path="../../typings/main.d.ts" />
+/// <reference path="../typings/windows-1251.d.ts" />
 "use strict";
 var windows1251 = (typeof window !== "undefined" ? window['windows1251'] : typeof global !== "undefined" ? global['windows1251'] : null);
 var point_1 = require('../model/point');
