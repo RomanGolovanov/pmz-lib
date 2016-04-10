@@ -5,18 +5,73 @@ exports.PmzModel = model_1.PmzModel;
 var model_file_1 = require("./storage/model-file");
 exports.PmzFile = model_file_1.PmzFile;
 
-},{"./model/model":4,"./storage/model-file":14}],2:[function(require,module,exports){
+},{"./model/model":5,"./storage/model-file":14}],2:[function(require,module,exports){
 "use strict";
+function asInt(text, radix) {
+    if (radix === void 0) { radix = 10; }
+    if (!text || !text.length) {
+        return null;
+    }
+    text = text.trim();
+    if (text === '?') {
+        return null;
+    }
+    if (text === '-1') {
+        return -1;
+    }
+    return parseInt(text, radix);
+}
+exports.asInt = asInt;
+function asArray(text) {
+    if (!text)
+        return [];
+    return text.split(',').map(function (item) {
+        return item === '?' ? null : item;
+    });
+}
+exports.asArray = asArray;
+function asIntArray(text) {
+    return asArray(text).map(function (item) {
+        if (!item)
+            return null;
+        return parseInt(item);
+    });
+}
+exports.asIntArray = asIntArray;
+function asFloatArray(text) {
+    return asArray(text).map(function (item) {
+        if (!item)
+            return null;
+        return parseFloat(item);
+    });
+}
+exports.asFloatArray = asFloatArray;
+
+},{}],3:[function(require,module,exports){
+"use strict";
+var Base = require('./base');
 var PmzColor = (function () {
     function PmzColor(c) {
         this.c = c;
         ;
     }
+    PmzColor.parse = function (text) {
+        return new PmzColor(Base.asInt(text, 16));
+    };
+    PmzColor.prototype.toString = function () {
+        if (this.c === null) {
+            return '';
+        }
+        if (this.c === -1) {
+            return '-1';
+        }
+        return this.c.toString(16).toUpperCase();
+    };
     return PmzColor;
 }());
 exports.PmzColor = PmzColor;
 
-},{}],3:[function(require,module,exports){
+},{"./base":2}],4:[function(require,module,exports){
 "use strict";
 var PmzMetadata = (function () {
     function PmzMetadata(name, cityName, countryName, version, description, comment, delays) {
@@ -32,7 +87,7 @@ var PmzMetadata = (function () {
 }());
 exports.PmzMetadata = PmzMetadata;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 var metadata_1 = require('./metadata');
 var transport_1 = require('./transport');
@@ -92,8 +147,9 @@ var PmzModel = (function () {
 }());
 exports.PmzModel = PmzModel;
 
-},{"./metadata":3,"./scheme":8,"./transport":11}],5:[function(require,module,exports){
+},{"./metadata":4,"./scheme":9,"./transport":11}],6:[function(require,module,exports){
 "use strict";
+var Base = require('./base');
 var PmzPoint = (function () {
     function PmzPoint(x, y) {
         this.x = x;
@@ -102,12 +158,31 @@ var PmzPoint = (function () {
     PmzPoint.prototype.isEmpty = function () {
         return this.x === 0 && this.y === 0;
     };
+    PmzPoint.parse = function (text) {
+        var values = Base.asIntArray(text);
+        return new PmzPoint(values[0], values[1]);
+    };
+    PmzPoint.parseArray = function (text) {
+        var values = Base.asIntArray(text);
+        var points = [];
+        for (var i = 0; i < (values.length - 1); i += 2) {
+            points.push(new PmzPoint(values[i], values[i + 1]));
+        }
+        return points;
+    };
+    PmzPoint.format = function (point) {
+        return [point.x, point.y].join(',');
+    };
+    PmzPoint.formatArray = function (points) {
+        return points.map(PmzPoint.format).join(', ');
+    };
     return PmzPoint;
 }());
 exports.PmzPoint = PmzPoint;
 
-},{}],6:[function(require,module,exports){
+},{"./base":2}],7:[function(require,module,exports){
 "use strict";
+var Base = require('./base');
 var PmzRect = (function () {
     function PmzRect(x, y, width, height) {
         this.x = x;
@@ -118,11 +193,29 @@ var PmzRect = (function () {
     PmzRect.prototype.isEmpty = function () {
         return this.x === 0 && this.y === 0 && this.width === 0 && this.height === 0;
     };
+    PmzRect.parse = function (text) {
+        var values = Base.asIntArray(text);
+        return new PmzRect(values[0], values[1], values[2], values[3]);
+    };
+    PmzRect.parseArray = function (text) {
+        var values = Base.asIntArray(text);
+        var rects = [];
+        for (var i = 0; i < (values.length - 3); i += 2) {
+            rects.push(new PmzRect(values[i], values[i + 1], values[i + 2], values[i + 3]));
+        }
+        return rects;
+    };
+    PmzRect.format = function (rect) {
+        return [rect.x, rect.y, rect.width, rect.height].join(',');
+    };
+    PmzRect.formatArray = function (rect) {
+        return rect.map(PmzRect.format).join(', ');
+    };
     return PmzRect;
 }());
 exports.PmzRect = PmzRect;
 
-},{}],7:[function(require,module,exports){
+},{"./base":2}],8:[function(require,module,exports){
 "use strict";
 var PmzSchemeLine = (function () {
     function PmzSchemeLine(id, name, color, labelColor, labelBackgroundColor, coords, rects, heights, rect, rects2, splines, visible) {
@@ -143,7 +236,7 @@ var PmzSchemeLine = (function () {
 }());
 exports.PmzSchemeLine = PmzSchemeLine;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 var PmzScheme = (function () {
     function PmzScheme(id, name, options, lines) {
@@ -152,12 +245,17 @@ var PmzScheme = (function () {
         this.options = options;
         this.lines = lines;
     }
+    PmzScheme.prototype.toString = function () {
+        return '[object Scheme ' + this.id + ':' + this.name + ']';
+    };
     return PmzScheme;
 }());
 exports.PmzScheme = PmzScheme;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
+var Base = require('./base');
+var point_1 = require('./point');
 var PmzSpline = (function () {
     function PmzSpline(line, src, dst, points, isSmooth) {
         this.line = line;
@@ -167,23 +265,32 @@ var PmzSpline = (function () {
         this.isSmooth = isSmooth;
         return this;
     }
+    PmzSpline.parse = function (text) {
+        var parts = Base.asArray(text);
+        var line = parts[0];
+        var src = parts[1];
+        var dst = parts[2];
+        var isSmooth = parts.length % 2 === 0;
+        var points = [];
+        for (var i = 3; i < (parts.length - 1); i += 2) {
+            points.push(new point_1.PmzPoint(parseInt(parts[i]), parseInt(parts[i + 1])));
+        }
+        return new PmzSpline(line, src, dst, points, isSmooth);
+    };
+    PmzSpline.format = function (spline) {
+        return [
+            spline.line,
+            spline.src,
+            spline.dst,
+            point_1.PmzPoint.formatArray(spline.points),
+            spline.isSmooth
+        ].join(',');
+    };
     return PmzSpline;
 }());
 exports.PmzSpline = PmzSpline;
 
-},{}],10:[function(require,module,exports){
-"use strict";
-var PmzTime = (function () {
-    function PmzTime(minutes, seconds) {
-        this.minutes = minutes;
-        this.seconds = seconds;
-        return this;
-    }
-    return PmzTime;
-}());
-exports.PmzTime = PmzTime;
-
-},{}],11:[function(require,module,exports){
+},{"./base":2,"./point":6}],11:[function(require,module,exports){
 "use strict";
 (function (PmzTransportType) {
     PmzTransportType[PmzTransportType["Metro"] = 0] = "Metro";
@@ -299,7 +406,7 @@ function save(metadata) {
 }
 exports.save = save;
 
-},{"../model/metadata":3}],14:[function(require,module,exports){
+},{"../model/metadata":4}],14:[function(require,module,exports){
 (function (global){
 /// <reference path="../typings/jszip.d.ts" />
 "use strict";
@@ -378,8 +485,12 @@ var PmzFile = (function () {
 exports.PmzFile = PmzFile;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../model/model":4,"./ini-file":12,"./metadata-file":13,"./scheme-file":15,"./transport-file":16,"./utils":17}],15:[function(require,module,exports){
+},{"../model/model":5,"./ini-file":12,"./metadata-file":13,"./scheme-file":15,"./transport-file":16,"./utils":17}],15:[function(require,module,exports){
 "use strict";
+var color_1 = require('../model/color');
+var point_1 = require('../model/point');
+var rect_1 = require('../model/rect');
+var spline_1 = require('../model/spline');
 var scheme_1 = require('../model/scheme');
 var scheme_line_1 = require('../model/scheme-line');
 var PmzUtils = require('./utils');
@@ -405,7 +516,7 @@ function loadSplines(ini) {
     var lineNodes = {};
     for (var key in ini) {
         var item = ini[key];
-        var spline = PmzUtils.asPmzSpline(item);
+        var spline = spline_1.PmzSpline.parse(item);
         if (!lineNodes[spline.line]) {
             lineNodes[spline.line] = [];
         }
@@ -417,7 +528,7 @@ function loadMapLines(ini, lineNodes) {
     var lines = [];
     for (var key in ini) {
         var item = ini[key];
-        lines.push(new scheme_line_1.PmzSchemeLine(key, key, PmzUtils.asPmzColor(item['Color']), item['LabelsColor'], item['LabelsBColor'], PmzUtils.asPmzPointArray(item['Coordinates']), PmzUtils.asPmzRectArray(item['Rects']), PmzUtils.asFloatArray(item['Heights']), PmzUtils.asPmzRect(item['Rect']), PmzUtils.asPmzRectArray(item['Rects2']), lineNodes[key], true));
+        lines.push(new scheme_line_1.PmzSchemeLine(key, key, color_1.PmzColor.parse(item['Color']), item['LabelsColor'], item['LabelsBColor'], point_1.PmzPoint.parseArray(item['Coordinates']), rect_1.PmzRect.parseArray(item['Rects']), PmzUtils.asFloatArray(item['Heights']), rect_1.PmzRect.parse(item['Rect']), rect_1.PmzRect.parseArray(item['Rects2']), lineNodes[key], true));
     }
     return lines;
 }
@@ -446,7 +557,7 @@ function save() {
 }
 exports.save = save;
 
-},{"../model/scheme":8,"../model/scheme-line":7,"./utils":17}],16:[function(require,module,exports){
+},{"../model/color":3,"../model/point":6,"../model/rect":7,"../model/scheme":9,"../model/scheme-line":8,"../model/spline":10,"./utils":17}],16:[function(require,module,exports){
 "use strict";
 var transport_1 = require('../model/transport');
 function loadTrpOptions(ini) {
@@ -505,100 +616,16 @@ exports.save = save;
 /// <reference path="../typings/windows-1251.d.ts" />
 "use strict";
 var windows1251 = (typeof window !== "undefined" ? window['windows1251'] : typeof global !== "undefined" ? global['windows1251'] : null);
-var point_1 = require('../model/point');
-var rect_1 = require('../model/rect');
-var time_1 = require('../model/time');
-var color_1 = require('../model/color');
-var spline_1 = require('../model/spline');
+var base_1 = require('../model/base');
+exports.asIntArray = base_1.asIntArray;
+exports.asFloatArray = base_1.asFloatArray;
+exports.asArray = base_1.asArray;
 var constants = {
     DEFAULT_MAP_NAME: 'Metro.map',
     DEFAULT_TRP_NAME: 'Metro.trp',
     DEFAULT_LINE_COLOR: 'black'
 };
 exports.constants = constants;
-function asInt(text) {
-    return text && text !== '?' ? parseInt(text) : null;
-}
-function asArray(text) {
-    if (!text)
-        return [];
-    return text.split(',').map(function (item) {
-        return item === '?' ? null : item;
-    });
-}
-exports.asArray = asArray;
-function asIntArray(text) {
-    return asArray(text).map(function (item) {
-        if (!item)
-            return null;
-        return parseInt(item);
-    });
-}
-exports.asIntArray = asIntArray;
-function asFloatArray(text) {
-    return asArray(text).map(function (item) {
-        if (!item)
-            return null;
-        return parseFloat(item);
-    });
-}
-exports.asFloatArray = asFloatArray;
-function asPmzPointArray(text) {
-    var values = asIntArray(text);
-    var points = [];
-    for (var i = 0; i < (values.length - 1); i += 2) {
-        points.push(new point_1.PmzPoint(values[i], values[i + 1]));
-    }
-    return points;
-}
-exports.asPmzPointArray = asPmzPointArray;
-function asPmzRectArray(text) {
-    var values = asIntArray(text);
-    var rects = [];
-    for (var i = 0; i < (values.length - 3); i += 2) {
-        rects.push(new rect_1.PmzRect(values[i], values[i + 1], values[i + 2], values[i + 3]));
-    }
-    return rects;
-}
-exports.asPmzRectArray = asPmzRectArray;
-function asPmzPoint(text) {
-    var values = asIntArray(text);
-    return new point_1.PmzPoint(values[0], values[1]);
-}
-exports.asPmzPoint = asPmzPoint;
-function asPmzRect(text) {
-    var values = asIntArray(text);
-    return new rect_1.PmzRect(values[0], values[1], values[2], values[3]);
-}
-exports.asPmzRect = asPmzRect;
-function asPmzSpline(text) {
-    var parts = asArray(text);
-    var line = parts[0];
-    var src = parts[1];
-    var dst = parts[2];
-    var isSpline = parts.length % 2 === 0;
-    var points = [];
-    for (var i = 3; i < (parts.length - 1); i += 2) {
-        points.push(new point_1.PmzPoint(parseInt(parts[i]), parseInt(parts[i + 1])));
-    }
-    return new spline_1.PmzSpline(line, src, dst, points, isSpline);
-}
-exports.asPmzSpline = asPmzSpline;
-function asPmzTime(text) {
-    if (!text || !text.length) {
-        return null;
-    }
-    var parts = text.split('.');
-    return new time_1.PmzTime(asInt(parts[0]), parts.length === 2 ? asInt(parts[1]) : null);
-}
-exports.asPmzTime = asPmzTime;
-function asPmzColor(text) {
-    if (!text || !text.length) {
-        return null;
-    }
-    return new color_1.PmzColor(asInt(text));
-}
-exports.asPmzColor = asPmzColor;
 function decodeWindows1251(buffer) {
     var byteString = '';
     buffer.forEach(function (b) {
@@ -618,5 +645,5 @@ function encodeWindows1251(text) {
 exports.encodeWindows1251 = encodeWindows1251;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../model/color":2,"../model/point":5,"../model/rect":6,"../model/spline":9,"../model/time":10}]},{},[1])(1)
+},{"../model/base":2}]},{},[1])(1)
 });

@@ -1,16 +1,18 @@
+
+import {PmzColor} from '../model/color';
 import {PmzPoint} from '../model/point';
+import {PmzRect} from '../model/rect';
 import {PmzSpline} from '../model/spline';
-import {PmzScheme} from '../model/scheme';
+import {PmzScheme, PmzSchemeOptions} from '../model/scheme';
 import {PmzSchemeLine} from '../model/scheme-line';
 import {PmzModel} from '../model/model';
 
 import * as PmzUtils from './utils';
 
-function loadMapOptions(ini: any): any {
+function loadMapOptions(ini: any): PmzSchemeOptions {
     if (!ini) {
         return {};
     }
-
     return {
         imageFileName: ini['ImageFileName'],
         stationDiameter: ini['StationDiameter'],
@@ -31,7 +33,7 @@ function loadSplines(ini: any) {
     var lineNodes: any = {};
     for (var key in ini) {
         var item: string = ini[key];
-        var spline = PmzUtils.asPmzSpline(item);
+        var spline = PmzSpline.parse(item);
         if (!lineNodes[spline.line]) {
             lineNodes[spline.line] = [];
         }
@@ -48,14 +50,14 @@ function loadMapLines(ini: any, lineNodes: any): PmzSchemeLine[] {
         lines.push(new PmzSchemeLine(
             key,
             key,
-            PmzUtils.asPmzColor(item['Color']),
+            PmzColor.parse(item['Color']),
             item['LabelsColor'],
             item['LabelsBColor'],
-            PmzUtils.asPmzPointArray(item['Coordinates']),
-            PmzUtils.asPmzRectArray(item['Rects']),
+            PmzPoint.parseArray(item['Coordinates']),
+            PmzRect.parseArray(item['Rects']),
             PmzUtils.asFloatArray(item['Heights']),
-            PmzUtils.asPmzRect(item['Rect']),
-            PmzUtils.asPmzRectArray(item['Rects2']),
+            PmzRect.parse(item['Rect']),
+            PmzRect.parseArray(item['Rects2']),
             lineNodes[key],
             true));
     }

@@ -1,9 +1,7 @@
-
 import {PmzMetadata} from './metadata';
 import {PmzTransport, PmzTransportType} from './transport';
 import {PmzScheme} from './scheme';
 import {PmzSchemeLine} from './scheme-line';
-
 
 export class PmzModel {
 
@@ -68,6 +66,3 @@ export class PmzModel {
         throw new Error(`Transport ${name} not found`);        
     }
 }
-
-
-
